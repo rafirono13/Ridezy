@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400..900;1,400..900&display=swap');
+@import 'tailwindcss';
+@plugin "daisyui" {
+  themes: light --default, lofi;
+}
+
+body {
+  font-family: 'Schibsted Grotesk', sans-serif;
+  /* background-image: linear-gradient(
+    45deg,
+    #ff9a9e 0%,
+    #fad0c4 99%,
+    #fad0c4 100%
+  ); */
+  background: #ffffff; /* fallback for old browsers */
+  background: -webkit-linear-gradient(
+    to top,
+    #000000,
+    #ffffff
+  ); /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(
+    to top,
+    #000000,
+    #ffffff
+  ); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
