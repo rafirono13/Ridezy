@@ -31,7 +31,9 @@ const CarCard = ({ car }) => {
         />
         <div
           className={`absolute top-3 right-3 badge-lg badge font-semibold ${
-            isAvailable ? 'badge-success' : 'badge-error text-white'
+            isAvailable
+              ? 'border-green-700 bg-green-500/20 text-white'
+              : 'badge-error text-white'
           }`}
         >
           {isAvailable ? 'Available' : 'Booked'}
@@ -44,7 +46,6 @@ const CarCard = ({ car }) => {
         </div>
         <div className="flex items-center  text-sm">
           <FaCalendarAlt className="mr-2" />
-          {/* This now uses formatDistanceToNow, just like your other components! */}
           Posted {formatDistanceToNow(new Date(dateAdded))} ago
         </div>
         <div className="card-actions justify-between items-center mt-4">
