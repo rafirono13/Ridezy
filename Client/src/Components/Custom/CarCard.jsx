@@ -1,82 +1,66 @@
-import React, { useLayoutEffect, useRef } from 'react';
+import React from 'react';
 import { Link } from 'react-router';
+import { motion } from 'framer-motion';
+import { FaMapMarkerAlt, FaCalendarAlt } from 'react-icons/fa';
 import { formatDistanceToNow } from 'date-fns';
-import { animate } from 'motion';
 
 const CarCard = ({ car }) => {
-  const cardRef = useRef(null);
-
-  useLayoutEffect(() => {
-    const cardElement = cardRef.current;
-    if (cardElement) {
-      animate(
-        cardElement,
-        {
-          opacity: [0, 1],
-          y: [20, 0],
-          scale: [0.98, 1],
-        },
-        { duration: 0.5, easing: 'ease-out' }
-      );
-    }
-  }, []);
+  const {
+    _id,
+    carModel,
+    imageUrl,
+    location,
+    dateAdded,
+    dailyRentalPrice,
+    isAvailable,
+  } = car;
 
   return (
-    <div
-      ref={cardRef}
-      className="card bg-[#e0e9f3dc] shadow-xl rounded-2xl overflow-hidden border border-transparent hover:border-primary transition-all duration-300"
-      role="listitem"
+    <motion.div
+      className="card card-compact bg-white/10 shadow-xl border rounded-2xl overflow-hidden"
+      whileHover={{ y: -5, transition: { duration: 0.2 } }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
     >
-      <figure className="relative h-56">
+      <figure className="relative">
         <img
-          src={car.imageUrl}
-          alt={`Image of ${car.carModel}`}
-          className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+          src={imageUrl}
+          alt={carModel}
+          className="w-full h-56 object-cover"
         />
-      </figure>
-      <div className="card-body p-5">
-        <h2
-          className="card-title text-xl font-bold text-gray-800"
-          aria-label={`Car Model: ${car.carModel}`}
-        >
-          {car.carModel}
-        </h2>
-        <p className="text-sm text-gray-500 mt-1">{car.location}</p>
-        <p className="text-xs text-gray-400 mt-2">
-          Posted {formatDistanceToNow(new Date(car.dateAdded))} ago
-        </p>
-
         <div
-          className={`badge mt-1 ${
-            car.isAvailable
-              ? 'outline-green-800 text-green-800'
-              : 'outline-red-800 text-red-800'
-          } badge-outline text-xs`}
-          aria-label={`Car Status: ${car.isAvailable ? 'Available' : 'Booked'}`}
+          className={`absolute top-3 right-3 badge-lg badge font-semibold ${
+            isAvailable ? 'badge-success' : 'badge-error text-white'
+          }`}
         >
-          {car.isAvailable ? 'Available' : 'Booked'}
+          {isAvailable ? 'Available' : 'Booked'}
         </div>
-
+      </figure>
+      <div className="card-body">
+        <h2 className="card-title">{carModel}</h2>
+        <div className="flex items-center  text-sm mt-1">
+          <FaMapMarkerAlt className="mr-2" /> {location}
+        </div>
+        <div className="flex items-center  text-sm">
+          <FaCalendarAlt className="mr-2" />
+          {/* This now uses formatDistanceToNow, just like your other components! */}
+          Posted {formatDistanceToNow(new Date(dateAdded))} ago
+        </div>
         <div className="card-actions justify-between items-center mt-4">
-          <p
-            className="text-lg font-semibold text-primary"
-            aria-label={`Rental Price: $${car.dailyRentalPrice} per day`}
-          >
-            ${car.dailyRentalPrice}
-            <span className="text-sm font-normal text-gray-600">/day</span>
+          <p className="font-bold text-lg">
+            <span className="text-primary">${dailyRentalPrice}</span>
+            <span className=" font-normal text-sm">/day</span>
           </p>
           <Link
-            to={`/cars/${car._id}`}
-            className="btn btn-primary btn-outline rounded-full px-6 tooltip"
-            aria-label={`View details for ${car.carModel}`}
-            role="button"
-            data-tip="Click to view Details"
+            to={`/cars/${_id}`}
+            className="btn btn-primary btn-outline btn-sm rounded-full px-4"
           >
             View Details
           </Link>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

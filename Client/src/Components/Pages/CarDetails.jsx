@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import useCarDetails from '../../Hooks/useCarDetails';
 import { FiArrowLeft, FiMapPin, FiTag, FiUser } from 'react-icons/fi';
@@ -13,7 +12,9 @@ const CarDetails = () => {
   const { user } = useAuth();
   const { data: car, isLoading, isError, error } = useCarDetails(id);
   const { mutate: createBooking, isPending: isBooking } = useCreateBooking();
-  const [isBooked, setIsBooked] = useState(false);
+
+  // DELETED: We are removing the local `isBooked` state to rely on the database.
+  // const [isBooked, setIsBooked] = useState(false);
 
   const handleBookNow = () => {
     if (!user) {
@@ -23,11 +24,7 @@ const CarDetails = () => {
 
     Swal.fire({
       title: `Confirm Your Booking`,
-      html: `
-      You are about to book the <strong>${car.carModel}</strong>.
-      <br/>
-      Price: <strong>$${car.dailyRentalPrice}/day</strong>
-    `,
+      html: `You are about to book the <strong>${car.carModel}</strong>.`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -51,7 +48,8 @@ const CarDetails = () => {
               showConfirmButton: false,
               timer: 3000,
             });
-            setIsBooked(true);
+            // DELETED: No more setIsBooked(true).
+            // The query invalidation in useCreateBooking will automatically refresh the car's data.
           },
           onError: err => {
             Swal.fire(
@@ -73,8 +71,6 @@ const CarDetails = () => {
     );
   }
 
-  const isButtonDisabled = isBooking || isBooked || !car.isAvailable;
-
   if (isError) {
     return (
       <div className="flex justify-center items-center h-screen text-red-500">
@@ -82,6 +78,9 @@ const CarDetails = () => {
       </div>
     );
   }
+
+  // THE FIX: The button's state is now derived *only* from the server data (`car.isAvailable`).
+  const isButtonDisabled = isBooking || !car?.isAvailable;
 
   return (
     <div>
@@ -104,10 +103,9 @@ const CarDetails = () => {
             </figure>
             <div className="card-body lg:w-1/2">
               <span className="badge badge-primary badge-outline">
-                {formatDistanceToNow(new Date(car.dateAdded))} ago
+                Posted {formatDistanceToNow(new Date(car.dateAdded))} ago
               </span>
               <h2 className="card-title text-3xl font-bold">{car.carModel}</h2>
-
               <div className="flex items-center gap-4 text-sm text-base-content/70 mt-2">
                 <span className="flex items-center gap-1">
                   <FiUser /> {car.userName}
@@ -116,9 +114,7 @@ const CarDetails = () => {
                   <FiMapPin /> {car.location}
                 </span>
               </div>
-
               <p className="mt-4">{car.description}</p>
-
               <div className="mt-4">
                 <p className="font-semibold mb-2">Features:</p>
                 <div className="flex flex-wrap gap-2">
@@ -130,7 +126,6 @@ const CarDetails = () => {
                   ))}
                 </div>
               </div>
-
               <div className="card-actions justify-between items-center mt-6">
                 <p className="text-2xl font-bold text-primary">
                   ${car.dailyRentalPrice}
@@ -139,6 +134,7 @@ const CarDetails = () => {
                   </span>
                 </p>
 
+                {/* THE FIX: This button now correctly shows its state based on data from the database. */}
                 <button
                   onClick={handleBookNow}
                   className="btn btn-primary"
@@ -147,7 +143,11 @@ const CarDetails = () => {
                   {isBooking && (
                     <span className="loading loading-spinner"></span>
                   )}
-                  {isBooked || !car.isAvailable ? 'Booked' : 'Book Now'}
+                  {isBooking
+                    ? 'Booking...'
+                    : !car?.isAvailable
+                    ? 'Booked'
+                    : 'Book Now'}
                 </button>
               </div>
             </div>
