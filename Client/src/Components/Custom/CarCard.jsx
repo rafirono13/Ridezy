@@ -33,7 +33,7 @@ const CarCard = ({ car }) => {
           className={`absolute top-3 right-3 badge-lg badge font-semibold ${
             isAvailable
               ? 'border-green-700 bg-green-500/20 text-white'
-              : 'badge-error text-white'
+              : 'border-red-700 bg-red-500/20 text-white'
           }`}
         >
           {isAvailable ? 'Available' : 'Booked'}
