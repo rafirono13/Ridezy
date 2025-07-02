@@ -73,47 +73,62 @@ async function run() {
     app.post("/bookings", verifyToken, async (req, res) => {
       const bookingDetails = req.body;
       const userEmail = req.user.email;
-      if (!userEmail) {
-        return res.status(401).send("Authentication is required");
+      console.log(
+        `LOG: Received booking request for car: ${bookingDetails.carId} from ${userEmail}`
+      );
+
+      if (!ObjectId.isValid(bookingDetails.carId)) {
+        console.log("LOG: Booking failed - Invalid Car ID format.");
+        return res.status(400).send({ message: "Invalid Car ID format." });
       }
-      const finalBookings = {
-        ...bookingDetails,
-        userEmail: userEmail,
-        bookingDate: new Date().toISOString(),
-        status: "confirmed",
-      };
+
+      const carIdToBook = new ObjectId(bookingDetails.carId);
+
       try {
-        const bookingResult = await bookingsCollection.insertOne(finalBookings);
-        if (!bookingResult.insertedId) {
-          throw new Error("Booking failed");
-        }
-
-        const carFilter = { _id: new ObjectId(bookingDetails.carId) };
-
-        const carUpdateDoc = {
-          $inc: { bookingCount: 1 },
-        };
-
-        const carUpdateResult = await carsCollection.updateOne(
-          carFilter,
-          carUpdateDoc
+        // Step 1: Atomically find a car that matches the ID AND is available, and update it.
+        const carUpdateResult = await carsCollection.findOneAndUpdate(
+          { _id: carIdToBook, isAvailable: true }, // The crucial filter
+          { $set: { isAvailable: false }, $inc: { bookingCount: 1 } } // The update to apply
         );
 
-        if (carUpdateResult.matchedCount === 0) {
-          console.warn(
-            `Booking created, but car with ID ${bookingDetails.carId} not found.`
+        // Step 2: Check if the update worked.
+        if (!carUpdateResult) {
+          // If carUpdateResult is null, it means the filter found no matching document.
+          // This is the correct way to handle a car that's already booked or doesn't exist.
+          console.log(
+            `LOG: Booking failed - Car ${carIdToBook} is not available or does not exist.`
           );
+          return res
+            .status(409)
+            .send({ message: "Sorry, this car is no longer available." });
         }
 
+        console.log(
+          `LOG: Successfully updated car ${carIdToBook} to unavailable. Now creating booking record.`
+        );
+
+        // Step 3: If the car was successfully updated, create the booking record.
+        const newBooking = {
+          carId: bookingDetails.carId,
+          carModel: bookingDetails.carModel,
+          imageUrl: bookingDetails.imageUrl,
+          totalPrice: bookingDetails.totalPrice,
+          userEmail: userEmail,
+          bookingDate: new Date().toISOString(),
+          status: "confirmed",
+        };
+        const bookingResult = await bookingsCollection.insertOne(newBooking);
+
+        console.log(
+          `LOG: Booking record ${bookingResult.insertedId} created successfully.`
+        );
         res.status(201).send({
-          message: "Booking created successfully",
+          message: "Booking created successfully!",
           bookingId: bookingResult.insertedId,
         });
       } catch (error) {
-        console.error("Booking creation failed:", error);
-        res
-          .status(500)
-          .send({ message: "Internal server error during booking process." });
+        console.error("LOG: CRITICAL ERROR in booking process:", error);
+        res.status(500).send({ message: "Internal server error." });
       }
     });
 
