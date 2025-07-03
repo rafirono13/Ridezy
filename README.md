@@ -40,7 +40,7 @@ ridezy/
 React, Tailwind CSS, DaisyUI, Firebase, Framer Motion, React Router, Axios, TanStack Query
 
 **Backend:**  
-Node.js, Express, MongoDB, Firebase Admin SDK, JWT, dotenv
+Node.js, Express, MongoDB, Firebase Admin SDK, dotenv
 
 ---
 
